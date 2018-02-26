@@ -1,0 +1,18 @@
+------------------------------------------------------------------------
+r32 | dragoron | 2014-10-19 22:16:24 +0000 (Sun, 19 Oct 2014) | 1 line
+Changed paths:
+   A /tags/v1.0.0 (from /trunk:31)
+
+Tagging as v1.0.0
+------------------------------------------------------------------------
+r31 | dragoron | 2014-10-19 22:14:07 +0000 (Sun, 19 Oct 2014) | 3 lines
+Changed paths:
+   M /trunk/.pkgmeta
+   M /trunk/MountManager.lua
+   M /trunk/MountManager.toc
+   M /trunk/embeds.xml
+
+Updated TOC
+Updated to work with Blizzard's new Mount Journal API
+Removed LibMounts from dependencies
+------------------------------------------------------------------------

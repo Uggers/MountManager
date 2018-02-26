@@ -1,0 +1,37 @@
+## Interface: 70200
+## Title: MountManager
+## Notes: Interface-central mount management
+## Author: dragoron
+## Version: v1.0.0
+## SavedVariables: MountManagerDB
+## OptionalDeps: Ace3
+## X-Embeds: Ace3
+## X-Category: Companions
+## X-Curse-Packaged-Version: v1.0.0
+## X-Curse-Project-Name: MountManager
+## X-Curse-Project-ID: mountmanager
+## X-Curse-Repository-ID: wow/mountmanager/mainline
+## X-Curse-Packaged-Version: v1.0.0
+## X-Curse-Project-Name: MountManager
+## X-Curse-Project-ID: mountmanager
+## X-Curse-Repository-ID: wow/mountmanager/mainline
+
+#@no-lib-strip@
+embeds.xml
+#@end-no-lib-strip@
+
+MountManager.xml
+
+Localization\enUS.lua
+Localization\deDE.lua
+Localization\esES.lua
+Localization\esMX.lua
+Localization\frFR.lua
+Localization\itIT.lua
+Localization\koKR.lua
+Localization\ptBR.lua
+Localization\ruRU.lua
+Localization\zhCN.lua
+Localization\zhTW.lua
+
+MountManager.lua
