@@ -644,6 +644,58 @@ function MountManager:GetRandomMount()
 	return nil
 end
 
+-- Class Mounts
+local DeathKnight = Death Knight
+local DemonHunter = Demon Hunter
+local Hunter = Hunter
+local Mage = Mage
+local Monk = Monk
+local Paladin = Paladin
+local Priest = Priest
+local Rogue = Rogue
+local Shaman = Shaman
+local Warlock = Warlock
+local Warrior = Warrior
+local classmounts =  {	
+[229387] = { Death Knight }, --Deathlord's Vilebrood Vanquisher
+
+[229417] = { Demon Hunter }, --Slayer's Felbroken Shrieker
+
+[229386] = { Hunter }, --Huntmaster's Loyal Wolfhawk
+[229438] = { Hunter }, --Huntmaster's Fierce Wolfhawk
+[229439] = { Hunter }, --Huntmaster's Dire Wolfhawk
+
+[229376] = { Mage }, --Archmage's Prismatic Disc
+
+[229385] = { Monk }, --Ban-Lu, Grandmaster's Companion
+
+[231435] = { Paladin }, --Highlord's Golden Charger
+[231589] = { Paladin }, --Highlord's Valorous Charge
+[231588] = { Paladin }, --Highlord's Vigilant Charger
+[231587] = { Paladin }, --Highlord's Vengeful Charger
+
+[229377] = { Priest }, --High Priest's Lightsworn Seeker
+
+[231434] = { Rogue }, --Shadowblade's Murderous Omen
+[231523] = { Rogue }, --Shadowblade's Lethal Omen
+[231524] = { Rogue }, --Shadowblade's Baneful Omen
+[231525] = { Rogue }, --Shadowblade's Crimson Omen
+
+[231442] = { Shaman }, --Farseer's Raging Tempest
+
+[238452] = { Warlock }, --Netherlord's Brimstone Wrathsteed
+[238454] = { Warlock }, --Netherlord's Accursed Wrathsteed
+[232412] = { Warlock }, --Netherlord's Chaotic Wrathsteed
+
+[229388] = { Warrior }, --Battlelord's Bloodthirsty War Wyrm
+}
+function MountManager:CheckClass(spell)
+	if classmounts[spell] then
+		return self.db.char.classmounts
+	end
+	return true
+end
+
 -- Profession restricted mounts
 local TAILORING_ID = 110426
 local ENGINEERING_ID = 110403
