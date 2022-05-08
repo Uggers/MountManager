@@ -651,6 +651,7 @@ local profMounts =  {
 	[61451] = { TAILORING_ID, 300 }, --Flying Carpet
 	[61309] = { TAILORING_ID, 300 }, --Magnificent Flying Carpet
 	[75596] = { TAILORING_ID, 300 }, --Frosty Flying Carpet
+	[169952] = { TAILORING_ID, 300 }, --Creeping Carpet
 	
 	[44153] = { ENGINEERING_ID, 300 }, --Flying Machine
 	[44151] = { ENGINEERING_ID, 300 }, --Turbo-Charged Flying Machine
