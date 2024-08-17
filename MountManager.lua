@@ -1,4 +1,13 @@
-﻿MountManager = LibStub("AceAddon-3.0"):NewAddon("MountManager", "AceConsole-3.0", "AceEvent-3.0")
+﻿local GetAddOnMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
+local GetNumAddOns = C_AddOns.GetNumAddOns or GetNumAddOns
+local IsAddOnLoaded = C_AddOns.IsAddOnLoaded or IsAddOnLoaded;
+local IsAddOnLoadOnDemand = C_AddOns.IsAddOnLoadOnDemand or IsAddOnLoadOnDemand;
+local GetAddOnInfo = C_AddOns.GetAddOnInfo or GetAddOnInfo
+local GetAddOnDependencies = C_AddOns.GetAddOnDependencies or GetAddOnDependencies
+local GetAddOnEnableState = C_AddOns.GetAddOnEnableState or GetAddOnEnableState
+-- local GetSpellInfo = C_Spell.GetSpellInfo or GetSpellInfo
+
+MountManager = LibStub("AceAddon-3.0"):NewAddon("MountManager", "AceConsole-3.0", "AceEvent-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("MountManager")
 
 ------------------------------------------------------------------
@@ -271,7 +280,7 @@ function MountManager:UpdateZoneStatus(event)
     
     state.isSwimming = IsSwimming() or IsSubmerged()
     
-	local usable, _ = IsUsableSpell(flightTest)
+	local usable, _ = C_Spell.IsSpellUsable(flightTest)
     if IsFlyableArea() and self.db.char.mount_skill > 2 and usable == true then
         state.isFlyable = true
     else
@@ -310,7 +319,7 @@ function MountManager:COMPANION_LEARNED()
 end
 
 function MountManager:UNIT_SPELLCAST_SUCCEEDED(event, unitTarget, castGUID, spellId)
-    if self.db.profile.autoNextMount and unit == "player" and spellId == select(7, GetSpellInfo(state.mount)) then
+    if self.db.profile.autoNextMount and unit == "player" and spellId == select(7, C_Spell.GetSpellInfo(state.mount)) then
         self:GenerateMacro()
     end
 end
@@ -569,14 +578,15 @@ function MountManager:GenerateMacro()
 	end
 	
 	if state.mount then
-		local name, rank, icon = GetSpellInfo(state.mount)
-		--icon = string.sub(icon, 17)
+		local name = C_Spell.GetSpellName(state.mount)
+		local iconID = C_Spell.GetSpellTexture(state.mount)
+		-- icon = string.sub(icon, 17)
 		
 		if self.db.profile.showInChat then
 			self:Print(string.format("%s |cff20ff20%s|r", L["The next selected mount is"], name))
 		end
 		
-		EditMacro(index, "MountManager", icon, string.format("/script MountManagerButton:Click(GetMouseButtonClicked());\n#showtooltip %s", name))
+		EditMacro(index, "MountManager", iconID, string.format("/script MountManagerButton:Click(GetMouseButtonClicked());\n#showtooltip %s", name))
 	else
 		self:Print(L["There is no mount available for the current character."])
 	end
@@ -661,7 +671,7 @@ local profMounts =  {
 }
 function MountManager:CheckProfession(spell)
 	if profMounts[spell] then
-		local skill = GetSpellInfo(profMounts[spell][1])
+		local skill = C_Spell.GetSpellInfo(profMounts[spell][1])
 		local req = profMounts[spell][2]
 		if self.db.char.prof[skill] then
 			return self.db.char.prof[skill] >= req
