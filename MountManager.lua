@@ -578,15 +578,14 @@ function MountManager:GenerateMacro()
 	end
 	
 	if state.mount then
-		local name = C_Spell.GetSpellName(state.mount)
-		local iconID = C_Spell.GetSpellTexture(state.mount)
+		local spellInfo = C_Spell.GetSpellInfo(state.mount)
 		-- icon = string.sub(icon, 17)
 		
 		if self.db.profile.showInChat then
-			self:Print(string.format("%s |cff20ff20%s|r", L["The next selected mount is"], name))
+			self:Print(string.format("%s |cff20ff20%s|r", L["The next selected mount is"], spellInfo.name))
 		end
 		
-		EditMacro(index, "MountManager", iconID, string.format("/script MountManagerButton:Click(GetMouseButtonClicked());\n#showtooltip %s", name))
+		EditMacro(index, "MountManager", spellInfo.iconID, string.format("/script MountManagerButton:Click(GetMouseButtonClicked());\n#showtooltip %s", spellInfo.name))
 	else
 		self:Print(L["There is no mount available for the current character."])
 	end
