@@ -1,7 +1,7 @@
-## Interface: 90200
+## Interface: 80000
 ## Title: MountManager
 ## Notes: Interface-central mount management
-## Author: dragoron, uggers
+## Author: dragoron
 ## Version: v1.0.0
 ## SavedVariables: MountManagerDB
 ## OptionalDeps: Ace3

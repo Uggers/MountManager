@@ -1,4 +1,13 @@
-﻿MountManager = LibStub("AceAddon-3.0"):NewAddon("MountManager", "AceConsole-3.0", "AceEvent-3.0")
+﻿local GetAddOnMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata
+local GetNumAddOns = C_AddOns.GetNumAddOns or GetNumAddOns
+local IsAddOnLoaded = C_AddOns.IsAddOnLoaded or IsAddOnLoaded;
+local IsAddOnLoadOnDemand = C_AddOns.IsAddOnLoadOnDemand or IsAddOnLoadOnDemand;
+local GetAddOnInfo = C_AddOns.GetAddOnInfo or GetAddOnInfo
+local GetAddOnDependencies = C_AddOns.GetAddOnDependencies or GetAddOnDependencies
+local GetAddOnEnableState = C_AddOns.GetAddOnEnableState or GetAddOnEnableState
+-- local GetSpellInfo = C_Spell.GetSpellInfo or GetSpellInfo
+
+MountManager = LibStub("AceAddon-3.0"):NewAddon("MountManager", "AceConsole-3.0", "AceEvent-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("MountManager")
 
 ------------------------------------------------------------------
@@ -66,6 +75,7 @@ local defaults = {
 		prof = {},
         mount_skill = 0,
 		serpent = false,
+		classmounts = true,
         mounts = {
 			skill = {},
             ground = {},
@@ -170,6 +180,7 @@ function MountManager:OnEnable()
     self.db.char.level = UnitLevel("player")
     self.db.char.race = select(2, UnitRace("player"))
     self.db.char.class = UnitClass("player")
+    self.db.char.class2 = select(2, UnitClass("player"))
     self.db.char.faction = UnitFactionGroup("player")
 	local prof1, prof2 = GetProfessions()
 	if prof1 ~= nil then
@@ -193,7 +204,7 @@ function MountManager:OnEnable()
     self:RegisterEvent("ZONE_CHANGED_NEW_AREA")						-- new world zone
     self:RegisterEvent("ZONE_CHANGED", "UpdateZoneStatus")			-- new sub-zone
     self:RegisterEvent("ZONE_CHANGED_INDOORS", "UpdateZoneStatus")	-- new city sub-zone
-    self:RegisterEvent("UPDATE_WORLD_STATES", "UpdateZoneStatus")	-- world pvp objectives updated
+    -- self:RegisterEvent("UPDATE_WORLD_STATES", "UpdateZoneStatus")	-- world pvp objectives updated
     self:RegisterEvent("SPELL_UPDATE_USABLE", "UpdateZoneStatus")	-- self-explanatory
 	
 	--[[-- Handle entering and exiting water
@@ -255,8 +266,8 @@ end
 
 function MountManager:ZONE_CHANGED_NEW_AREA()
 	if not InCombatLockdown() then
-		SetMapToCurrentZone();
-		state.zone = GetCurrentMapAreaID()
+		C_Map.GetBestMapForUnit("player");
+		state.zone = C_Map.GetBestMapForUnit("player")
 	end
 	
 	self:UpdateZoneStatus()
@@ -269,7 +280,7 @@ function MountManager:UpdateZoneStatus(event)
     
     state.isSwimming = IsSwimming() or IsSubmerged()
     
-	local usable, _ = IsUsableSpell(flightTest)
+	local usable, _ = C_Spell.IsSpellUsable(flightTest)
     if IsFlyableArea() and self.db.char.mount_skill > 2 and usable == true then
         state.isFlyable = true
     else
@@ -307,8 +318,8 @@ function MountManager:COMPANION_LEARNED()
     self:ScanForNewMounts()
 end
 
-function MountManager:UNIT_SPELLCAST_SUCCEEDED(event, unit, spellName)
-    if self.db.profile.autoNextMount and unit == "player" and spellName == GetSpellInfo(state.mount) then
+function MountManager:UNIT_SPELLCAST_SUCCEEDED(event, unitTarget, castGUID, spellId)
+    if self.db.profile.autoNextMount and unit == "player" and spellId == select(7, C_Spell.GetSpellInfo(state.mount)) then
         self:GenerateMacro()
     end
 end
@@ -347,8 +358,8 @@ function MountManager:ScanForNewMounts()
             newMounts = newMounts + 1
 			
 			local _, _, _, _, mountType = C_MountJournal.GetMountInfoExtraByID(id)
-
 			
+			-- 284 for 2 Chopper / Mechano-Hog
 			-- 269 for 2 Water Striders (Azure and Crimson)
 			-- 254 for 1 Subdued Seahorse (Vashj'ir and water)
 			-- 248 for 163 "typical" flying mounts, including those that change based on level
@@ -379,7 +390,7 @@ function MountManager:ScanForNewMounts()
 				self.db.char.mounts["ground"][spellID] = true
 			end
         end
-end
+    end
     
     if newMounts > 0 then
         self:Print(string.format("|cff20ff20%s|r %s", newMounts, L["new mount(s) found!"]))
@@ -417,6 +428,7 @@ function MountManager:SummonMount(mount)
         end
     end
 end
+
 ------------------------------------------------------------------
 -- Mount Configuration
 ------------------------------------------------------------------
@@ -474,7 +486,7 @@ function MountManager:UpdateMountChecks()
 			
 			if correctFaction == true and isCollected == true and parent:IsEnabled() == true then
 					
-			-- Set the checked state based on the currently saved value
+				-- Set the checked state based on the currently saved value
 				local checked = false;
 				for mountType, typeTable in pairs(self.db.char.mounts) do
 					if typeTable[spellID] ~= nil then
@@ -566,14 +578,15 @@ function MountManager:GenerateMacro()
 	end
 	
 	if state.mount then
-		local name, rank, icon = GetSpellInfo(state.mount)
-		--icon = string.sub(icon, 17)
+		local name = C_Spell.GetSpellName(state.mount)
+		local iconID = C_Spell.GetSpellTexture(state.mount)
+		-- icon = string.sub(icon, 17)
 		
 		if self.db.profile.showInChat then
 			self:Print(string.format("%s |cff20ff20%s|r", L["The next selected mount is"], name))
 		end
 		
-		EditMacro(index, "MountManager", icon, string.format("/script MountManagerButton:Click(GetMouseButtonClicked());\n#showtooltip %s", name))
+		EditMacro(index, "MountManager", iconID, string.format("/script MountManagerButton:Click(GetMouseButtonClicked());\n#showtooltip %s", name))
 	else
 		self:Print(L["There is no mount available for the current character."])
 	end
@@ -620,7 +633,7 @@ function MountManager:GetRandomMount()
 		-- Make a sublist of any valid mounts of the selected type
 		local mounts = {}
 		for mount, active in pairs(self.db.char.mounts[type]) do
-			if self.db.char.mounts[type][mount] == true and self:CheckProfession(mount) and self:CheckSerpent(mount) then
+			if self.db.char.mounts[type][mount] == true and self:CheckProfession(mount) and self:CheckSerpent(mount) and self:CheckClass(mount) then
 				mounts[#mounts + 1] = mount
 			end
 		end
@@ -644,58 +657,6 @@ function MountManager:GetRandomMount()
 	return nil
 end
 
--- Class Mounts
-local DeathKnight = Death Knight
-local DemonHunter = Demon Hunter
-local Hunter = Hunter
-local Mage = Mage
-local Monk = Monk
-local Paladin = Paladin
-local Priest = Priest
-local Rogue = Rogue
-local Shaman = Shaman
-local Warlock = Warlock
-local Warrior = Warrior
-local classmounts =  {	
-[229387] = { Death Knight }, --Deathlord's Vilebrood Vanquisher
-
-[229417] = { Demon Hunter }, --Slayer's Felbroken Shrieker
-
-[229386] = { Hunter }, --Huntmaster's Loyal Wolfhawk
-[229438] = { Hunter }, --Huntmaster's Fierce Wolfhawk
-[229439] = { Hunter }, --Huntmaster's Dire Wolfhawk
-
-[229376] = { Mage }, --Archmage's Prismatic Disc
-
-[229385] = { Monk }, --Ban-Lu, Grandmaster's Companion
-
-[231435] = { Paladin }, --Highlord's Golden Charger
-[231589] = { Paladin }, --Highlord's Valorous Charge
-[231588] = { Paladin }, --Highlord's Vigilant Charger
-[231587] = { Paladin }, --Highlord's Vengeful Charger
-
-[229377] = { Priest }, --High Priest's Lightsworn Seeker
-
-[231434] = { Rogue }, --Shadowblade's Murderous Omen
-[231523] = { Rogue }, --Shadowblade's Lethal Omen
-[231524] = { Rogue }, --Shadowblade's Baneful Omen
-[231525] = { Rogue }, --Shadowblade's Crimson Omen
-
-[231442] = { Shaman }, --Farseer's Raging Tempest
-
-[238452] = { Warlock }, --Netherlord's Brimstone Wrathsteed
-[238454] = { Warlock }, --Netherlord's Accursed Wrathsteed
-[232412] = { Warlock }, --Netherlord's Chaotic Wrathsteed
-
-[229388] = { Warrior }, --Battlelord's Bloodthirsty War Wyrm
-}
-function MountManager:CheckClass(spell)
-	if classmounts[spell] then
-		return self.db.char.classmounts
-	end
-	return true
-end
-
 -- Profession restricted mounts
 local TAILORING_ID = 110426
 local ENGINEERING_ID = 110403
@@ -710,7 +671,7 @@ local profMounts =  {
 }
 function MountManager:CheckProfession(spell)
 	if profMounts[spell] then
-		local skill = GetSpellInfo(profMounts[spell][1])
+		local skill = C_Spell.GetSpellInfo(profMounts[spell][1])
 		local req = profMounts[spell][2]
 		if self.db.char.prof[skill] then
 			return self.db.char.prof[skill] >= req
@@ -743,6 +704,52 @@ local serpents = {
 function MountManager:CheckSerpent(spell)
 	if serpents[spell] then
 		return self.db.char.serpent
+	end
+	return true
+end
+
+-- Class Mounts
+local classmounts =  {	
+	[229387] = "DEATHKNIGHT", --Deathlord's Vilebrood Vanquisher
+	[48778] = "DEATHKNIGHT", --Acherus Deathcharger
+	[54729] = "DEATHKNIGHT", --Winged Steed of the Ebon Blade
+	[200175] = "DEMONHUNTER", --Felsaber
+	[229417] = "DEMONHUNTER", --Slayer's Felbroken Shrieker
+	[229386] = "HUNTER", --Huntmaster's Loyal Wolfhawk
+	[229438] = "HUNTER", --Huntmaster's Fierce Wolfhawk
+	[229439] = "HUNTER", --Huntmaster's Dire Wolfhawk
+	[229376] = "MAGE", --Archmage's Prismatic Disc
+	[229385] = "MONK", --Ban-Lu, Grandmaster's Companion
+	[23214] = "PALADIN", --Charger
+	[34767] = "PALADIN", --Thalassian Charger
+	[73630] = "PALADIN", --HGreat Exarch's Elekk
+	[69826] = "PALADIN", --Great Sunwalker Kodo
+	[66906] = "PALADIN", --Argent Charger
+	[231435] = "PALADIN", --Highlord's Golden Charger
+	[231589] = "PALADIN", --Highlord's Valorous Charge
+	[231588] = "PALADIN", --Highlord's Vigilant Charger
+	[231587] = "PALADIN", --Highlord's Vengeful Charger
+	[229377] = "PRIEST", --High Priest's Lightsworn Seeker
+	[231434] = "ROGUE", --Shadowblade's Murderous Omen
+	[231523] = "ROGUE", --Shadowblade's Lethal Omen
+	[231524] = "ROGUE", --Shadowblade's Baneful Omen
+	[231525] = "ROGUE", --Shadowblade's Crimson Omen
+	[231442] = "SHAMAN", --Farseer's Raging Tempest
+	[5784] = "WARLOCK", --Felsteed
+	[23161] = "WARLOCK", --Dreadsteed
+	[238452] = "WARLOCK", --Netherlord's Brimstone Wrathsteed
+	[238454] = "WARLOCK", --Netherlord's Accursed Wrathsteed
+	[232412] = "WARLOCK", --Netherlord's Chaotic Wrathsteed
+	[229388] = "WARRIOR", --Battlelord's Bloodthirsty War Wyrm
+}
+
+function MountManager:CheckClass(spell)
+	if classmounts[spell] then
+		if classmounts[spell] == self.db.char.class2 then
+			return self.db.char.classmounts
+		else
+			return false
+		end
 	end
 	return true
 end
